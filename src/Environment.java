@@ -4,14 +4,14 @@ import java.util.Random;
 
 public class Environment {
 	
-	private ArrayList<Feeder> aFeeders;
-	private ArrayList<Food> aFood;
+	private ArrayList<Animal> aAnimals;
+	private ArrayList<Plant> aPlants;
 	private Cell [][] aCell;
 	
-	public Environment(int pSize, ArrayList<Food> pFood, ArrayList<Feeder> pFeeders)
+	public Environment(int pSize, ArrayList<Plant> pFood, ArrayList<Animal> pAnimals)
 	{
-		aFeeders = pFeeders;
-		aFood = pFood;
+		aAnimals = pAnimals;
+		aPlants = pFood;
 		aCell = new Cell[pSize][pSize];
 		for (int i = 0; i < aCell.length; i++)
 			for (int j = 0; j < aCell.length; j++)
@@ -19,14 +19,23 @@ public class Environment {
 		
 		Random r = new Random();
 		
-		for(Food f : pFood)
+		for(Plant f : pFood)
 		{
-			aCell[r.nextInt(pSize)][r.nextInt(pSize)].addFood(f);
+			aCell[r.nextInt(pSize)][r.nextInt(pSize)].addPlant(f);
 		}
 		
-		for(Feeder f : pFeeders)
+		for(Animal f : pAnimals)
 		{
-			aCell[r.nextInt(pSize)][r.nextInt(pSize)].addFeeder(f);
+			int i = r.nextInt(pSize);
+			int j = r.nextInt(pSize);
+			while (aCell[i][j].hasAnimal())
+			{
+				i = r.nextInt(pSize);
+				j = r.nextInt(pSize);
+			}
+			Location l = new Location(i,j);
+			f.setLocation(l);
+			aCell[i][j].addAnimal(f);
 		}
 		
 	}
@@ -34,17 +43,23 @@ public class Environment {
 	public void life(int years) {
 		while (years > 0)
 		{
-			moveFeeders();
-			//development method, will be replaced by an observer class for extra utilities
+			moveOrganisms();
 			years--;
 		}
 		
 	}
 	
 	private void printGrid() {
+		String nums = " ";
 		for (int i = 0; i < aCell.length; i++)
 		{
-			String s = "";
+			nums += " "+i+" ";
+		}
+		System.out.println(nums);
+
+		for (int i = 0; i < aCell.length; i++)
+		{
+			String s = i+"";
 			for (int j = 0; j < aCell.length; j++)
 			{
 				s += aCell[i][j].toString();
@@ -55,123 +70,150 @@ public class Environment {
 	}
 
 	//deals with moving feeders, but also calls a method to see if they eat 
-	private void moveFeeders() {
+	private void moveOrganisms() {
+		Object[] feeders = aAnimals.toArray();
+		
+		//debugging
+		//for (Feeder f : aFeeders)
+		//{
+		//	System.out.println("Feeder: "+f.getI()+","+f.getJ()+" has BMI: "+f.getBmi());
+		//}
+
+		for (Object lFeeder : feeders)
+		{
+			int i = ((Animal) lFeeder).getI();
+			int j = ((Animal) lFeeder).getJ();
+			handleFeeder(i, j);
+		}
+		
+
 		for (int i = 0; i < aCell.length; i++)
 		{
 			for (int j = 0; j < aCell.length; j++)
 			{
-				if (aCell[i][j].hasFeeder())
-				{
-					handleFeeder(i, j);
-					printGrid();
-				}
-				if (aCell[i][j].hasFood())
+				if (aCell[i][j].hasPlant())
 				{
 					handleFood(i, j);
 				}
 			}
 		}
 
-		
-	}
-
-	private void handleFeeder(int i, int j) {
-		//0 is up, 1 is left, 2 is down, 3 is right
-		Feeder moving = aCell[i][j].getFeeder();
-		aCell[i][j].removeFeeder();
-		
-		if (moving.doesSurvive())
-		{
-			moving.feed(aCell[i][j]);
-			int dest = moving.move();
-
-			if (dest == 0)
-			{
-				if (i > 0)
-				{
-					aCell[i-1][j].addFeeder(moving);
-				} 
-				else
-				{
-					aCell[i+1][j].addFeeder(moving);
-				}
-				
-			}
-			if (dest == 1)
-			{
-				if (j > 0)
-				{
-					aCell[i][j-1].addFeeder(moving);
-				} 
-				else
-				{
-					aCell[i][j+1].addFeeder(moving);
-				}		
-			}
-			if (dest == 2)
-			{
-				if (i < aCell.length-1)
-				{
-					aCell[i+1][j].addFeeder(moving);
-				} 
-				else
-				{
-					aCell[i-1][j].addFeeder(moving);
-				}
-				
-			}
-			if (dest == 3)
-			{
-				if (j < aCell.length-1)
-				{
-					aCell[i][j+1].addFeeder(moving);
-				} 
-				else
-				{
-					aCell[i][j-1].addFeeder(moving);
-				}
-				
-			}
-		}
-		if (moving.doesReproduce())
-		{
-			Feeder f = new Feeder();
-			aFeeders.add(f);
-			if (i+1 < aCell.length)
-				aCell[i+1][j].addFeeder(f);
-			else if (j+1 < aCell.length)
-				aCell[i][j+1].addFeeder(f);
-		}
+		printGrid();
+		System.out.println("");
 	}
 	
+	private void handleFeeder(int i, int j) {
+		Animal moving = aCell[i][j].getAnimal();
+		if (moving.doesSurvive())
+		{
+			if (aCell[i][j].hasPlant() && moving.doesEat())
+			{
+				Plant lFood = aCell[i][j].getPlant();
+				moving.feed(lFood);
+				if (!lFood.respawn())
+				{
+					foodDies(lFood, new Location(i,j));
+				}
+			}
+			Location lLocation = chosenSpot(moving);
+			if (lLocation.getI() != -1)
+			{
+				moving.setLocation(lLocation);
+				aCell[i][j].removeAnimal();
+				aCell[lLocation.getI()][lLocation.getJ()].addAnimal(moving);
+			}
+			
+			if (moving.doesReproduce())
+			{
+				Animal f = new Animal(moving);
+				f.setLocation(new Location(moving.getI(), moving.getJ()));
+				lLocation = chosenSpot(f);
+				if (lLocation.getI() != -1)
+				{
+					f.setLocation(lLocation);
+					aCell[lLocation.getI()][lLocation.getJ()].addAnimal(f);
+					aAnimals.add(f);
+				}
+			}
+		} 
+		else
+		{
+			aCell[i][j].removeAnimal();
+			aAnimals.remove(moving);
+		}
+		
+	}
+	
+	private Location chosenSpot(Animal pFeeder) {
+		Location dest = pFeeder.altMove();
+		int y = dest.getI();
+		int x = dest.getJ();
+		
+		if (x >= 0 && y >= 0 && x < aCell.length && y < aCell.length && !aCell[y][x].hasAnimal())
+		{
+			return new Location(y,x);
+		}
+		else
+		{
+			//only one of these can be true
+			if (x < 0)
+			{
+				x += 2;
+			}
+			if (y < 0)
+			{
+				y += 2;
+			}
+			if (x > aCell.length-1)
+			{
+				x -= 2;
+			}
+			if (y > aCell.length-1)
+			{
+				y -= 2;
+			}
+			if (!aCell[y][x].hasAnimal())
+			{
+				return new Location(y,x);
+			}
+		}
+		//if -1,-1, then either dont move or dont add child to aCell
+		return new Location(-1,-1);
+	}
+
+	private void foodDies(Plant pFood, Location l) {
+		aPlants.remove(pFood);
+		aCell[l.getI()][l.getJ()].removePlant();
+	}
+
 	private void handleFood(int i, int j) {
-		Food f = aCell[i][j].getFood();
+		Plant f = aCell[i][j].getPlant();
 		if (f.spread())
 		{
-			Food f1 = new Food();
-			Food f2 = new Food();
-			Food f3 = new Food();
-			Food f4 = new Food();
+			Plant f1 = new Plant();
+			Plant f2 = new Plant();
+			Plant f3 = new Plant();
+			Plant f4 = new Plant();
 			
-			if (i+1 < aCell.length)
+			if (i+1 < aCell.length && f.spread())
 			{
-				aCell[i+1][j].addFood(f1);
-				aFood.add(f1);
+				aCell[i+1][j].addPlant(f1);
+				aPlants.add(f1);
 			}
-			if (j+1 < aCell.length)
+			if (j+1 < aCell.length && f.spread())
 			{
-				aCell[i][j+1].addFood(f1);
-				aFood.add(f2);
+				aCell[i][j+1].addPlant(f1);
+				aPlants.add(f2);
 			}
-			if (i > 0)
+			if (i > 0 && f.spread())
 			{
-				aCell[i-1][j].addFood(f1);
-				aFood.add(f3);
+				aCell[i-1][j].addPlant(f1);
+				aPlants.add(f3);
 			}
-			if (j > 0)
+			if (j > 0 && f.spread())
 			{
-				aCell[i][j-1].addFood(f1);
-				aFood.add(f4);
+				aCell[i][j-1].addPlant(f1);
+				aPlants.add(f4);
 			}
 		}
 		

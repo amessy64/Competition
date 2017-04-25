@@ -5,23 +5,23 @@ public class Client
 {
 	public static void main(String[] args)
 	{
-		int size = 6;
-		ArrayList<Feeder> feeders = new ArrayList<>();
-		ArrayList<Food> foods = new ArrayList<>();
+		int size = 9;
+		ArrayList<Animal> animals = new ArrayList<>();
+		ArrayList<Plant> plants = new ArrayList<>();
 		
-		Feeder f1 = new Feeder();
-		Feeder fred = new Feeder();
-		feeders.add(f1);
-		feeders.add(fred);
+		Animal f1 = new Animal();
+		Animal fred = new Animal();
+		animals.add(f1);
+		animals.add(fred);
 		
-		Food f2 = new Food();
-		Food corn = new Food();
-		foods.add(f2);
-		foods.add(corn);
+		Plant f2 = new Plant();
+		Plant corn = new Plant();
+		plants.add(f2);
+		plants.add(corn);
 		
-		Environment e = new Environment(size, foods, feeders);
+		Environment e = new Environment(size, plants, animals);
 		
-		int years = 500;
+		int years = 60;
 		e.life(years);
 	}
 }

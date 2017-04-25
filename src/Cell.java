@@ -1,67 +1,67 @@
 
 public class Cell {
 	
-	private Food aFood;
-	private Feeder aFeeder;
+	private Plant aPlant;
+	private Animal aAnimal;
 	
 	public Cell()
 	{
-		aFood = null;
-		aFeeder = null;
+		aPlant = null;
+		aAnimal = null;
 	}
 	
-	public void addFood(Food pFood)
+	public void addPlant(Plant pPlant)
 	{
-		aFood = pFood;
+		aPlant = pPlant;
 	}
 	
-	public void addFeeder(Feeder pFeeder)
+	public void addAnimal(Animal pAnimal)
 	{
-		aFeeder = pFeeder;
+		aAnimal = pAnimal;
 	}
 	
-	public Food getFood()
+	public Plant getPlant()
 	{
-		return aFood;
+		return aPlant;
 	}
 	
-	public Feeder getFeeder()
+	public Animal getAnimal()
 	{
-		return aFeeder;
+		return aAnimal;
 	}
 	
-	public void removeFood()
+	public void removePlant()
 	{
-		aFood = null;
+		aPlant = null;
 	}
 	
-	public void removeFeeder()
+	public void removeAnimal()
 	{
-		aFeeder = null;
+		aAnimal = null;
 	}
 
-	public boolean hasFeeder() 
+	public boolean hasAnimal() 
 	{
-		return aFeeder != null;
+		return aAnimal != null;
 	}
 
-	public boolean hasFood()
+	public boolean hasPlant()
 	{
-		return aFood != null;
+		return aPlant != null;
 	}
 	
 	@Override
 	public String toString()
 	{
-		if (aFood != null && aFeeder != null)
-			return "[o]";
-		if (aFood == null && aFeeder != null)
-			return " o ";
-		if (aFood != null && aFeeder == null)
-			return "[ ]";
-		if (aFood == null && aFeeder == null)
-			return "|_|";
-		return "|_|";
+		if (aPlant != null && aAnimal != null)
+			return "{*}";
+		if (aPlant == null && aAnimal != null)
+			return "{ }";
+		if (aPlant != null && aAnimal == null)
+			return " * ";
+		if (aPlant == null && aAnimal == null)
+			return "   ";
+		return "   ";
 	}
 	
 }
